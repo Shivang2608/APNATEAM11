@@ -1,16 +1,105 @@
-# React + Vite
+🏏 Fantasy Cricket App (React + Vite)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A fully responsive Fantasy Cricket Web App built using React + Vite, featuring team selection, player roles, captain/vice-captain selection, match listings, sidebar navigation, and localStorage persistence.
 
-Currently, two official plugins are available:
+This project replicates the core logic of fantasy platforms like Dream11 — pick players, assign C/VC, and save your teams.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+🚀 Features
+✅ Match Listing
 
-## React Compiler
+Shows all upcoming matches
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Click any match to start team creation
 
-## Expanding the ESLint configuration
+Fully responsive UI
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+✅ Player Selection
+
+Select 11 players
+
+Shows player role counts (WK, BAT, AR, BOWL)
+
+Auto-updates selection count
+
+Displays credit usage
+
+Prevents overselecting
+
+✅ Captain & Vice-Captain Selection
+
+Clean, mobile-friendly screen
+
+Highlights selected C & VC
+
+Prevents assigning both roles to same player
+
+Save Team button visible on all screens
+
+✅ My Teams
+
+Stores all created teams in localStorage
+
+Shows teams by match
+
+Lets you edit existing teams
+
+✅ Sidebar Navigation
+
+Desktop = always visible left sidebar
+
+Mobile = hamburger opens a sliding drawer
+
+Pages:
+
+Home
+
+My Matches
+
+My Teams
+
+Refer & Earn
+
+Gemz Coins
+
+Games
+
+✅ Tech Stack
+
+React
+
+Vite
+
+Tailwind CSS
+
+LocalStorage API
+
+Lucide Icons
+
+📂 Project Structure
+src/
+│── components/
+│   ├── Sidebar.jsx
+│── pages/
+│   ├── Home.jsx
+│   ├── UpcomingMatches.jsx
+│   ├── PickPlayersPage.jsx
+│   ├── PickCaptainPage.jsx
+│   ├── MyTeamsPage.jsx
+│── App.jsx
+│── main.jsx
+│── data/
+│   ├── matches.json (optional)
+
+🛠️ Installation & Setup
+1️⃣ Clone the Repo
+git clone https://github.com/yourusername/fantasy-app
+cd fantasy-app
+
+2️⃣ Install Dependencies
+npm install
+
+3️⃣ Start Dev Server
+npm run dev
+
+
+App runs on:(http://localhost:5173/)
