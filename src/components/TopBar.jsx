@@ -46,7 +46,7 @@ const MenuIcon = (props) => (
 
 export default function TopBar({ toggleSidebar }) {
   return (
-    <header className="h-20 bg-white shadow-lg flex items-center justify-between px-6 md:px-10 sticky top-0 z-20 mb-8">
+    <header className="h-20 bg-white shadow-lg flex items-center justify-between px-4 md:px-10 sticky top-0 z-20 mb-8">
 
       {/* Mobile Hamburger Button */}
       <button 
@@ -56,20 +56,26 @@ export default function TopBar({ toggleSidebar }) {
         <MenuIcon className="w-8 h-8" />
       </button>
 
-      {/* LOGO (Centered on mobile) */}
+      {/* LOGO (Centered on mobile) - Adjusted text size for small screens */}
       <div className="md:hidden">
-        <h1 className="text-2xl font-extrabold text-red-500">
-          APNATEAM <span className="text-gray-900 text-xl">11</span>
+        <h1 className="text-xl font-extrabold text-red-500">
+          APNATEAM <span className="text-gray-900 text-lg">11</span>
         </h1>
       </div>
 
       {/* Right Section */}
-      <div className="flex items-center space-x-8">
+      {/* CHANGED: space-x-8 to space-x-3 md:space-x-8 to save space on mobile */}
+      <div className="flex items-center space-x-3 md:space-x-8">
 
-        {/* Wallet Button */}
-        <button className="flex items-center px-5 py-3 bg-gray-100 rounded-xl text-base font-semibold hover:bg-gray-200 transition">
-          <WalletIcon className="w-6 h-6 mr-2 text-green-600" />
-          ₹ 12,120.99
+        {/* Wallet Button - FIXED */}
+        <button className="flex items-center p-2 md:px-5 md:py-3 md:bg-gray-100 rounded-xl text-base font-semibold hover:bg-gray-200 transition">
+          {/* Icon is always visible, margin-right only on desktop */}
+          <WalletIcon className="w-7 h-7 md:w-6 md:h-6 md:mr-2 text-green-600" />
+          
+          {/* Text is HIDDEN on mobile, visible on Desktop (md:block) */}
+          <span className="hidden md:block">
+            ₹ 12,120.99
+          </span>
         </button>
         
         {/* Bell */}
@@ -81,7 +87,6 @@ export default function TopBar({ toggleSidebar }) {
         <button className="text-gray-500 hover:text-red-500 transition">
           <UserIcon className="w-7 h-7" />
         </button>
-
 
       </div>
     </header>
