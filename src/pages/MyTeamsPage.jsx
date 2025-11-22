@@ -1,14 +1,20 @@
 // src/pages/MyTeamsPage.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Pencil } from "lucide-react";
 
-export default function MyTeamsPage({
-  myTeams = [],
-  match,
-  setPage,
-  setSelectedForEdit,
-}) {
+export default function MyTeamsPage({ match, setPage, setSelectedForEdit }) {
   const [activeTab, setActiveTab] = useState("MY_TEAMS");
+  const [myTeams, setMyTeams] = useState([]);
+
+  /* --------------------------------------------------------
+      LOAD TEAMS FROM LOCAL STORAGE ON PAGE LOAD / REFRESH
+  --------------------------------------------------------- */
+  useEffect(() => {
+    const saved = localStorage.getItem("myTeams");
+    if (saved) {
+      setMyTeams(JSON.parse(saved));
+    }
+  }, []);
 
   const contests = [
     { prize: 1000, entry: 10, spots: 100, winners: 10 },
@@ -61,12 +67,18 @@ export default function MyTeamsPage({
               You have not created any teams yet.
             </p>
           ) : (
-            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+            <div className="space-y-4 max-h-[400px] overflow-y-auto no-scrollbar pr-2">
               {myTeams.map((team) => (
                 <TeamCard
                   key={team.id}
                   team={team}
-                  onEdit={() => setSelectedForEdit(team)}
+                  onEdit={() => {
+                    setSelectedForEdit(team);
+                    setPage({
+                      page: "PICK_PLAYERS",
+                      data: { selectedMatch: match, editTeam: team },
+                    });
+                  }}
                 />
               ))}
             </div>
@@ -76,48 +88,103 @@ export default function MyTeamsPage({
 
       {/* CONTESTS */}
       {activeTab === "CONTESTS" && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {contests.map((c, idx) => (
-            <div
-              key={idx}
-              className="relative bg-gradient-to-b from-red-50 to-white rounded-xl shadow-lg p-4 flex flex-col justify-between hover:shadow-2xl transition"
-            >
-              <div className="mb-3">
-                <h3 className="text-xl font-bold text-red-600">₹{c.prize}</h3>
-                <p className="text-sm text-gray-600">Entry ₹{c.entry}</p>
-              </div>
+        // outer scroll wrapper for mobile so contests area can scroll without breaking page
+        <div
+          className="
+            max-h-[75vh]
+            overflow-y-auto
+            pr-1
+            -mr-1
+            md:overflow-visible
+            md:max-h-none
+          "
+          style={{ WebkitOverflowScrolling: "touch" }}
+        >
+          {/* grid: bigger cards on desktop (3 columns) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
+            {contests.map((c, idx) => {
+              // compute a nice percentage for visual (currently always 0)
+              const filledPercent = 0; // change as you integrate live data
 
-              <div className="mb-3">
-                <div className="flex justify-between text-xs text-gray-500 mb-1">
-                  <span>{c.spots} spots</span>
-                  <span>{c.spots} left</span>
+              return (
+                <div
+                  key={idx}
+                  className="relative bg-gradient-to-b from-red-50 to-white rounded-2xl shadow-lg p-6 flex flex-col justify-between hover:shadow-2xl transition transform hover:-translate-y-1"
+                >
+                  {/* Top: prize and entry */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h3 className="text-2xl font-extrabold text-red-600">
+                        ₹{c.prize}
+                      </h3>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Entry ₹{c.entry} • {c.spots} spots
+                      </p>
+                    </div>
+
+                    {/* small badge */}
+                    <div className="text-right">
+                      <div className="inline-block px-3 py-1 rounded-full bg-white text-sm font-semibold text-red-600 shadow">
+                        {c.winners} Winners
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Progress and details */}
+                  <div className="mb-4">
+                    <div className="flex justify-between text-xs text-gray-500 mb-2">
+                      <span>{c.spots} spots</span>
+                      <span>{Math.max(0, c.spots - Math.floor((filledPercent / 100) * c.spots))} left</span>
+                    </div>
+
+                    <div className="w-full bg-gray-200 h-3 rounded-full overflow-hidden">
+                      <div
+                        className="bg-red-600 h-3 rounded-full"
+                        style={{ width: `${filledPercent}%` }}
+                      />
+                    </div>
+
+                    <p className="text-xs text-gray-500 mt-2">{filledPercent}% filled</p>
+                  </div>
+
+                  {/* Extra description area (premium feel) */}
+                  <div className="mb-4 text-sm text-gray-600">
+                    <p className="mb-2">Guaranteed pool • Fast payouts</p>
+                    <p className="text-xs text-gray-400">
+                      Join now — limited spots. Compete with others and win big!
+                    </p>
+                  </div>
+
+                  {/* Footer: winners + join */}
+                  <div className="flex items-center justify-between mt-2">
+                    <div className="flex items-center gap-3">
+                      <div className="flex flex-col text-xs">
+                        <span className="text-gray-700 font-semibold">Top Prize</span>
+                        <span className="text-gray-500 text-sm">₹{Math.floor(c.prize * 0.5)}</span>
+                      </div>
+
+                      <div className="flex flex-col text-xs">
+                        <span className="text-gray-700 font-semibold">Entry</span>
+                        <span className="text-gray-500 text-sm">₹{c.entry}</span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() =>
+                        setPage({
+                          page: "PICK_PLAYERS",
+                          data: { selectedMatch: match, contest: c },
+                        })
+                      }
+                      className="ml-4 px-4 py-2 bg-red-600 text-white rounded-full text-sm hover:bg-red-700 transition-shadow shadow-md"
+                    >
+                      Join Contest
+                    </button>
+                  </div>
                 </div>
-
-                <div className="w-full bg-gray-200 h-2 rounded-full">
-                  <div
-                    className="bg-red-600 h-2 rounded-full"
-                    style={{ width: "0%" }}
-                  ></div>
-                </div>
-
-                <p className="text-xs text-gray-500 mt-1">0% filled</p>
-              </div>
-
-              <p className="text-xs text-gray-500 mb-2">{c.winners} Winners</p>
-
-              <button
-                onClick={() =>
-                  setPage({
-                    page: "PICK_PLAYERS",
-                    data: { selectedMatch: match, contest: c },
-                  })
-                }
-                className="mt-auto px-3 py-2 bg-red-600 text-white rounded-full text-sm hover:bg-red-700 transition"
-              >
-                Join Contest
-              </button>
-            </div>
-          ))}
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
@@ -125,7 +192,7 @@ export default function MyTeamsPage({
 }
 
 /* --------------------------------------------------------
-   TEAM CARD — FIXED ROLE DETECTION & IMAGE FALLBACK
+   TEAM CARD COMPONENT
 --------------------------------------------------------- */
 function TeamCard({ team, onEdit }) {
   const captain = team.captain;

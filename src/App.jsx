@@ -10,8 +10,34 @@ import MyTeamsPage from "./pages/MyTeamsPage";
 import UpcomingMatchesPage from "./pages/UpcomingMatchesPage";
 
 export default function App() {
-  const [pageState, setPageState] = useState({ page: "MATCHES", data: null });
+  // -------------------------------
+  // 🔴 PAGE + DATA STATE
+  // -------------------------------
+  const [pageState, setPageState] = useState({
+    page: "MATCHES",
+    data: null,
+  });
+
   const [selectedMatch, setSelectedMatch] = useState(null);
+
+  // --------------------------------------------------
+  // ✅ Restore last visited page on refresh
+  // --------------------------------------------------
+  useEffect(() => {
+    const savedState = localStorage.getItem("pageState");
+    const savedMatch = localStorage.getItem("selectedMatch");
+
+    if (savedState) setPageState(JSON.parse(savedState));
+    if (savedMatch) setSelectedMatch(JSON.parse(savedMatch));
+  }, []);
+
+  // --------------------------------------------------
+  // ✅ Save page state on every page change
+  // --------------------------------------------------
+  const updatePage = (newPage) => {
+    setPageState(newPage);
+    localStorage.setItem("pageState", JSON.stringify(newPage));
+  };
 
   // -------------------------------
   // 🟢 Load saved teams from localStorage
@@ -25,7 +51,7 @@ export default function App() {
     }
   }, []);
 
-  // 🟢 Save teams to localStorage on every update
+  // Save teams automatically
   useEffect(() => {
     localStorage.setItem("allUserTeams", JSON.stringify(allUserTeams));
   }, [allUserTeams]);
@@ -42,7 +68,7 @@ export default function App() {
   const handleSaveTeam = (teamObj) => {
     setAllUserTeams((prev) => {
       const updated = [...prev, teamObj];
-      localStorage.setItem("allUserTeams", JSON.stringify(updated)); // Save to storage
+      localStorage.setItem("allUserTeams", JSON.stringify(updated));
       return updated;
     });
   };
@@ -53,11 +79,14 @@ export default function App() {
   const handleDeleteTeam = (teamId) => {
     setAllUserTeams((prev) => {
       const updated = prev.filter((t) => t.id !== teamId);
-      localStorage.setItem("allUserTeams", JSON.stringify(updated)); // Save to storage
+      localStorage.setItem("allUserTeams", JSON.stringify(updated));
       return updated;
     });
   };
 
+  // ----------------------------------------------------------------
+  // 🔥 THE MAIN PAGE RENDERING
+  // ----------------------------------------------------------------
   const renderPage = () => {
     const page = pageState.page;
     const data = pageState.data;
@@ -68,7 +97,8 @@ export default function App() {
           <UpcomingMatchesPage
             onSelectMatch={(match) => {
               setSelectedMatch(match);
-              setPageState({ page: "MY_TEAMS", data: null });
+              localStorage.setItem("selectedMatch", JSON.stringify(match));
+              updatePage({ page: "MY_TEAMS", data: null });
             }}
           />
         );
@@ -78,11 +108,11 @@ export default function App() {
           <MyTeamsPage
             match={selectedMatch}
             myTeams={allUserTeams}
-            setPage={setPageState}
+            setPage={updatePage}
             setSelectedForEdit={(team) => {
               setPrefillTeam(team);
-              setSelectedMatch(selectedMatch);
-              setPageState({ page: "PICK_PLAYERS", data: null });
+              localStorage.setItem("selectedMatch", JSON.stringify(selectedMatch));
+              updatePage({ page: "PICK_PLAYERS", data: null });
             }}
           />
         );
@@ -92,7 +122,7 @@ export default function App() {
           <PickPlayersPage
             selectedMatch={selectedMatch}
             onSaveTeam={handleSaveTeam}
-            setPage={setPageState}
+            setPage={updatePage}
             prefillTeam={prefillTeam}
           />
         );
@@ -112,7 +142,7 @@ export default function App() {
               <p>No players selected. Please pick players first.</p>
               <button
                 onClick={() =>
-                  setPageState({ page: "PICK_PLAYERS", data: null })
+                  updatePage({ page: "PICK_PLAYERS", data: null })
                 }
                 className="mt-4 px-3 py-2 border rounded"
               >
@@ -127,7 +157,7 @@ export default function App() {
             selectedPlayers={players}
             selectedMatch={match}
             onSaveTeam={handleSaveTeam}
-            setPage={setPageState}
+            setPage={updatePage}
             editingTeam={prefillTeam}
           />
         );
@@ -137,7 +167,8 @@ export default function App() {
           <UpcomingMatchesPage
             onSelectMatch={(match) => {
               setSelectedMatch(match);
-              setPageState({ page: "MY_TEAMS", data: null });
+              localStorage.setItem("selectedMatch", JSON.stringify(match));
+              updatePage({ page: "MY_TEAMS", data: null });
             }}
           />
         );
@@ -149,19 +180,16 @@ export default function App() {
       {/* Sidebar */}
       <Sidebar
         currentPage={pageState.page}
-        setPage={setPageState}
+        setPage={updatePage}
         isOpen={isSidebarOpen}
         toggleSidebar={toggleSidebar}
       />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-h-screen bg-gray-100 relative mx-4">
-        {/* TopBar */}
-        <TopBar toggleSidebar={toggleSidebar} />
-
-        {/* Page Content */}
-        <div className="flex-1 overflow-hidden">{renderPage()}</div>
-      </div>
+  <TopBar toggleSidebar={toggleSidebar} />
+  <div className="flex-1 overflow-y-auto no-scrollbar">{renderPage()}</div>
+</div>
     </div>
   );
 }

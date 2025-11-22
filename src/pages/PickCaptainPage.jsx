@@ -1,9 +1,77 @@
 // src/pages/PickCaptainPage.jsx
 import React, { useState } from "react";
 
-export default function PickCaptainPage({ selectedPlayers, selectedMatch, onSaveTeam, setPage, editingTeam }) {
+export default function PickCaptainPage({
+  selectedPlayers,
+  selectedMatch,
+  onSaveTeam,
+  setPage,
+  editingTeam,
+}) {
   const [captainId, setCaptainId] = useState(editingTeam?.captain?.id || null);
-  const [viceCaptainId, setViceCaptainId] = useState(editingTeam?.viceCaptain?.id || null);
+  const [viceCaptainId, setViceCaptainId] = useState(
+    editingTeam?.viceCaptain?.id || null
+  );
+
+  // 🔥 Load old teams from localStorage
+  const loadTeams = () => {
+    const saved = localStorage.getItem("myTeams");
+    return saved ? JSON.parse(saved) : [];
+  };
+
+  // 🔥 Save teams into localStorage
+  const saveTeams = (teams) => {
+    localStorage.setItem("myTeams", JSON.stringify(teams));
+  };
+
+  const handleSave = () => {
+    if (!captainId || !viceCaptainId) {
+      return alert("Please select both Captain and Vice-Captain.");
+    }
+
+    const captain = selectedPlayers.find(
+      (p) => p.id === captainId || p.player_id === captainId
+    );
+    const viceCaptain = selectedPlayers.find(
+      (p) => p.id === viceCaptainId || p.player_id === viceCaptainId
+    );
+
+    const teamObj = {
+      id: editingTeam?.id || `team_${Date.now()}`,
+      players: selectedPlayers,
+      matchId: selectedMatch?.id,
+      createdAt: new Date().toISOString(),
+      creditsLeft:
+        100 -
+        selectedPlayers.reduce(
+          (s, p) => s + Number(p.credit || p.value || p.cost || 0),
+          0
+        ),
+      captain,
+      viceCaptain,
+    };
+
+    // 🔥 1. get old teams
+    let teams = loadTeams();
+
+    // 🔥 Editing team → replace the old one
+    if (editingTeam) {
+      teams = teams.map((t) => (t.id === editingTeam.id ? teamObj : t));
+    }
+    // 🔥 New team → push
+    else {
+      teams.push(teamObj);
+    }
+
+    // 🔥 2. save updated teams list
+    saveTeams(teams);
+
+    // Also call parent method if needed
+    if (typeof onSaveTeam === "function") onSaveTeam(teamObj);
+
+    // 🔥 3. Go to MY_TEAMS page & KEEP STATE after refresh
+    setPage({ page: "MY_TEAMS", data: teamObj });
+  };
 
   if (!selectedPlayers || !selectedPlayers.length) {
     return (
@@ -19,31 +87,8 @@ export default function PickCaptainPage({ selectedPlayers, selectedMatch, onSave
     );
   }
 
-  const handleSave = () => {
-    if (!captainId || !viceCaptainId) {
-      return alert("Please select both Captain and Vice-Captain.");
-    }
-
-    const captain = selectedPlayers.find(p => p.id === captainId || p.player_id === captainId);
-    const viceCaptain = selectedPlayers.find(p => p.id === viceCaptainId || p.player_id === viceCaptainId);
-
-    const teamObj = {
-      id: editingTeam?.id || `team_${Date.now()}`,
-      players: selectedPlayers,
-      matchId: selectedMatch?.id,
-      createdAt: new Date().toISOString(),
-      creditsLeft: 100 - selectedPlayers.reduce((s, p) => s + Number(p.credit || p.value || p.cost || 0), 0),
-      captain,
-      viceCaptain
-    };
-
-    if (typeof onSaveTeam === "function") onSaveTeam(teamObj);
-
-    setPage({ page: "MY_TEAMS", data: teamObj });
-  };
-
   return (
-    <div className="max-w-4xl mx-auto pb-24">
+    <div className="max-w-4xl mx-auto pb-40 md:pb-24">
 
       <h2 className="text-2xl font-bold mb-4">
         Pick Captain & Vice-Captain —{" "}
@@ -51,48 +96,72 @@ export default function PickCaptainPage({ selectedPlayers, selectedMatch, onSave
           `${selectedMatch?.team_a_short} vs ${selectedMatch?.team_b_short}`}
       </h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-        {selectedPlayers.map(player => {
-          const id = player.id || player.player_id;
-          const name = player.player_name || player.name || player.player_full_name || `Player ${id}`;
-          const role = player.role || player.position || player.player_role || "NA";
-          const team = player.team || player.team_short || player.team_name || "TEAM";
+      {/* ✅ ADDED SCROLL WRAPPER FOR MOBILE */}
+      <div
+        className="
+          max-h-[70vh] 
+          overflow-y-auto 
+          pr-1 
+          -mr-1
+          md:max-h-none 
+          md:overflow-visible
+        "
+        style={{ WebkitOverflowScrolling: "touch" }}
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+          {selectedPlayers.map((player) => {
+            const id = player.id || player.player_id;
 
-          const isCaptain = captainId === id;
-          const isViceCaptain = viceCaptainId === id;
+            const name =
+              player.player_name ||
+              player.name ||
+              player.player_full_name ||
+              `Player ${id}`;
 
-          const optionStyle = "px-2 py-1 rounded cursor-pointer text-sm";
-          const selectedStyle = "bg-red-600 text-white";
+            const role = player.role || player.position || "NA";
+            const team = player.team || player.team_short || "TEAM";
 
-          return (
-            <div key={id} className="p-3 border rounded-lg shadow-sm flex flex-col justify-between">
-              <div>
-                <div className="font-semibold">{name}</div>
-                <div className="text-xs text-gray-500">{role} • {team}</div>
-              </div>
+            const isCaptain = captainId === id;
+            const isViceCaptain = viceCaptainId === id;
 
-              <div className="mt-2 flex items-center justify-between space-x-2">
-                <div
-                  onClick={() => setCaptainId(id)}
-                  className={`${optionStyle} ${
-                    isCaptain ? selectedStyle : "border border-gray-300"
-                  } ${isViceCaptain ? "opacity-50 cursor-not-allowed" : ""}`}
-                >
-                  Captain
+            const optionStyle = "px-2 py-1 rounded cursor-pointer text-sm";
+            const selectedStyle = "bg-red-600 text-white";
+
+            return (
+              <div
+                key={id}
+                className="p-3 border rounded-lg shadow-sm flex flex-col justify-between"
+              >
+                <div>
+                  <div className="font-semibold">{name}</div>
+                  <div className="text-xs text-gray-500">
+                    {role} • {team}
+                  </div>
                 </div>
 
-                <div
-                  onClick={() => setViceCaptainId(id)}
-                  className={`${optionStyle} ${
-                    isViceCaptain ? selectedStyle : "border border-gray-300"
-                  } ${isCaptain ? "opacity-50 cursor-not-allowed" : ""}`}
-                >
-                  Vice-Captain
+                <div className="mt-2 flex items-center justify-between space-x-2">
+                  <div
+                    onClick={() => !isViceCaptain && setCaptainId(id)}
+                    className={`${optionStyle} ${
+                      isCaptain ? selectedStyle : "border border-gray-300"
+                    } ${isViceCaptain ? "opacity-50 cursor-not-allowed" : ""}`}
+                  >
+                    Captain
+                  </div>
+
+                  <div
+                    onClick={() => !isCaptain && setViceCaptainId(id)}
+                    className={`${optionStyle} ${
+                      isViceCaptain ? selectedStyle : "border border-gray-300"
+                    } ${isCaptain ? "opacity-50 cursor-not-allowed" : ""}`}
+                  >
+                    Vice-Captain
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
 
       {/* DESKTOP BUTTONS */}
@@ -101,7 +170,7 @@ export default function PickCaptainPage({ selectedPlayers, selectedMatch, onSave
           onClick={() =>
             setPage({
               page: "PICK_PLAYERS",
-              data: { players: selectedPlayers, match: selectedMatch }
+              data: { players: selectedPlayers, match: selectedMatch },
             })
           }
           className="px-4 py-2 border rounded text-sm"
@@ -117,13 +186,13 @@ export default function PickCaptainPage({ selectedPlayers, selectedMatch, onSave
         </button>
       </div>
 
-      {/* MOBILE STICKY BOTTOM BUTTONS */}
+      {/* MOBILE STICKY BUTTONS */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg p-3 z-50 md:hidden flex gap-3">
         <button
           onClick={() =>
             setPage({
               page: "PICK_PLAYERS",
-              data: { players: selectedPlayers, match: selectedMatch }
+              data: { players: selectedPlayers, match: selectedMatch },
             })
           }
           className="flex-1 px-4 py-2 border rounded text-sm"
@@ -138,7 +207,6 @@ export default function PickCaptainPage({ selectedPlayers, selectedMatch, onSave
           Save Team
         </button>
       </div>
-
     </div>
   );
 }

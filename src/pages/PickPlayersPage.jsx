@@ -156,7 +156,7 @@ export default function PickPlayersPage({ selectedMatch, onSaveTeam, setPage, pr
   const matchTeamB = (selectedMatch?.t2_short_name || selectedMatch?.team_b_short || 'PS').toUpperCase();
 
   return (
-    <div className="w-full max-w-6xl mx-auto pb-24">
+    <div className="w-full max-w-6xl mx-auto pb-24 ">
 
       {/* TOP SUMMARY BAR */}
       <div className="bg-red-600 text-white px-4 py-2 rounded mb-4 shadow-md">
@@ -219,26 +219,40 @@ export default function PickPlayersPage({ selectedMatch, onSaveTeam, setPage, pr
           const credit = Number(p.event_player_credit ?? p.event_player_credits ?? p.credit ?? 0).toFixed(1);
 
           return (
-            <button
+            <div
               key={idKey}
-              onClick={() => toggleSelect(p)}
-              disabled={disabled}
-              className={`w-full text-left p-3 rounded-lg shadow-sm border flex items-center justify-between
+              className={`w-full p-3 rounded-lg shadow-sm border flex items-center justify-between
                 ${isSelected ? 'bg-red-50 border-red-400' : 'bg-white hover:shadow'}
                 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              <div>
+              {/* LEFT: Player Info */}
+              <div className="flex flex-col">
                 <div className="font-semibold">{playerName}</div>
                 <div className="text-xs text-gray-500">{playerRoleStr} • {playerTeam}</div>
               </div>
 
-              <div className="text-sm font-medium">{credit}</div>
-            </button>
+              {/* RIGHT SIDE: Credit + +/– Button */}
+              <div className="flex items-center gap-4">
+                <div className="text-sm font-medium">{credit}</div>
+
+                {/* + / – Button */}
+                <button
+                  onClick={() => toggleSelect(p)}
+                  disabled={disabled}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-lg font-bold border
+                    ${isSelected ? 'bg-red-600 text-white border-red-700' : 'bg-red-600 text-white border-green-700'}
+                    ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
+                  `}
+                >
+                  {isSelected ? '–' : '+'}
+                </button>
+              </div>
+            </div>
           );
         })}
       </div>
 
-      {/* STICKY BOTTOM BAR (Always Visible on Mobile) */}
+      {/* STICKY BOTTOM BAR (Mobile) */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg p-3 z-50 flex flex-col gap-2 md:hidden">
         <button
           disabled={summary.total !== MAX_PLAYERS}
@@ -258,7 +272,7 @@ export default function PickPlayersPage({ selectedMatch, onSaveTeam, setPage, pr
         </button>
       </div>
 
-      {/* Desktop buttons (already visible, keep original) */}
+      {/* Desktop Buttons */}
       <div className="hidden md:block mt-6 bg-gray-50 rounded p-3 shadow-inner space-y-2">
         <button
           disabled={summary.total !== MAX_PLAYERS}

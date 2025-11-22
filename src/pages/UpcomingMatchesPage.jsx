@@ -113,9 +113,15 @@ export default function UpcomingMatchesPage({ onSelectMatch }) {
 
         const res = await fetch(API_URLS.matches);
         const data = await res.json();
-        const cricketMatches = data?.matches?.cricket || [];
+        const apiMatches = data?.matches?.cricket || [];
 
-        const formatted = cricketMatches.map((m) => ({
+        if (apiMatches.length === 0) {
+          setMatches([]);
+          return;
+        }
+
+        // Format the original API match
+        const base = apiMatches.map((m) => ({
           id: m.id,
           match_name: m.match_name,
           team_a_name: m.t1_name,
@@ -125,9 +131,19 @@ export default function UpcomingMatchesPage({ onSelectMatch }) {
           team_a_logo: m.t1_image,
           team_b_logo: m.t2_image,
           start_date: m.match_date,
+        }))[0];
+
+        // Duplicate the match into 10 unique matches
+        const generatedMatches = Array.from({ length: 10 }).map((_, i) => ({
+          ...base,
+          id: `${base.id}-${i + 1}`,
+          match_name: `${base.team_a_short} vs ${base.team_b_short} • Match ${i + 1}`,
+          team_a_name: base.team_a_name + (i % 2 === 0 ? " Stars" : " Warriors"),
+          team_b_name: base.team_b_name + (i % 3 === 0 ? " Titans" : " Kings"),
+          start_date: new Date(Date.now() + i * 3600_000).toISOString(),
         }));
 
-        setMatches(formatted);
+        setMatches(generatedMatches);
       } catch (err) {
         setError("Failed to load matches.");
       } finally {
@@ -140,16 +156,12 @@ export default function UpcomingMatchesPage({ onSelectMatch }) {
 
   return (
     <div className="w-full max-w-7xl mx-auto">
-      
+
       {/* 🔥 SLIDESHOW BANNER */}
       <div className="relative w-full h-56 md:h-64 overflow-hidden rounded-xl shadow-lg mb-6">
-        
-        {/* Slides */}
         <div
           className="flex transition-transform duration-700"
-          style={{
-            transform: `translateX(-${slide * 100}%)`,
-          }}
+          style={{ transform: `translateX(-${slide * 100}%)` }}
         >
           {BANNERS.map((img, i) => (
             <img
@@ -179,6 +191,7 @@ export default function UpcomingMatchesPage({ onSelectMatch }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {loading && <LoadingSpinner />}
         {error && <ErrorMessage message={error} />}
+
         {!loading &&
           !error &&
           matches.map((match) => (
