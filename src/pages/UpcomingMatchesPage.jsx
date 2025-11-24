@@ -17,7 +17,7 @@ const BANNERS = [
   
   banner1,
   banner2,
-  banner3
+  banner3,
 ];
 
 // --- Helper Components ---
