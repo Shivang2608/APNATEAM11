@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import banner1 from "../assets/logo1.png";
-import banner2 from "../assets/logo2.png";
-import banner3 from "../assets/logo3.png";
+import banner1 from "../assets/Logo1.png";
+import banner2 from "../assets/Logo2.png";
+import banner3 from "../assets/Logo3.png";
 
 // --- Constants ---
 const API_URLS = {
